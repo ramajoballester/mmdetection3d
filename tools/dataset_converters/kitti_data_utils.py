@@ -173,7 +173,8 @@ def get_kitti_image_info(path,
                          extend_matrix=True,
                          num_worker=8,
                          relative_path=True,
-                         with_imageshape=True):
+                         with_imageshape=True,
+                         image_filetail='.png'):
     """
     KITTI annotation format version 2:
     {
@@ -217,7 +218,7 @@ def get_kitti_image_info(path,
             pc_info['velodyne_path'] = get_velodyne_path(
                 idx, path, training, relative_path)
         image_info['image_path'] = get_image_path(idx, path, training,
-                                                  relative_path)
+                                    relative_path, file_tail=image_filetail)
         if with_imageshape:
             img_path = image_info['image_path']
             if relative_path:

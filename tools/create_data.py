@@ -265,6 +265,44 @@ def semantickitti_data_prep(info_prefix, out_dir):
         info_prefix, out_dir)
 
 
+def dair_data_prep(root_path,
+                    info_prefix,
+                    version,
+                    out_dir,
+                    with_plane=False):
+    """Prepare data related to Kitti dataset.
+
+    Related data consists of '.pkl' files recording basic infos,
+    2D annotations and groundtruth database.
+
+    Args:
+        root_path (str): Path of dataset root.
+        info_prefix (str): The prefix of info filenames.
+        version (str): Dataset version.
+        out_dir (str): Output directory of the groundtruth database info.
+        with_plane (bool, optional): Whether to use plane information.
+            Default: False.
+    """
+    kitti.create_kitti_info_file(root_path, info_prefix, with_plane, 
+                                 image_filetail='.jpg')
+    kitti.create_reduced_point_cloud(root_path, info_prefix)
+
+    info_train_path = osp.join(out_dir, f'{info_prefix}_infos_train.pkl')
+    info_val_path = osp.join(out_dir, f'{info_prefix}_infos_val.pkl')
+    info_trainval_path = osp.join(out_dir, f'{info_prefix}_infos_trainval.pkl')
+    update_pkl_infos('kitti', out_dir=out_dir, pkl_path=info_train_path)
+    update_pkl_infos('kitti', out_dir=out_dir, pkl_path=info_val_path)
+    update_pkl_infos('kitti', out_dir=out_dir, pkl_path=info_trainval_path)
+    create_groundtruth_database(
+        'KittiDataset',
+        root_path,
+        info_prefix,
+        f'{info_prefix}_infos_train.pkl',
+        relative_path=False,
+        mask_anno_path='instances_train.json',
+        with_mask=(version == 'mask'))
+
+
 parser = argparse.ArgumentParser(description='Data converter arg parser')
 parser.add_argument('dataset', metavar='kitti', help='name of the dataset')
 parser.add_argument(
@@ -416,5 +454,13 @@ if __name__ == '__main__':
     elif args.dataset == 'semantickitti':
         semantickitti_data_prep(
             info_prefix=args.extra_tag, out_dir=args.out_dir)
+    # Support DAIR-V2X with kitti format
+    elif args.dataset == 'dair-v2x':
+        dair_data_prep(
+            root_path=args.root_path,
+            info_prefix=args.extra_tag,
+            version=args.version,
+            out_dir=args.out_dir,
+            with_plane=args.with_plane)
     else:
         raise NotImplementedError(f'Don\'t support {args.dataset} dataset.')
